@@ -674,7 +674,7 @@
     camera.bottom = camera.top - H * s;
     camera.updateProjectionMatrix();
 
-    host.style.setProperty("--bub", `${Math.max(PHONE ? 26 : 18, Math.min(36, tw * (PHONE ? 0.07 : 0.03))).toFixed(1)}px`);
+    host.style.setProperty("--bub", `${Math.max(PHONE ? 31 : 22, Math.min(44, tw * (PHONE ? 0.084 : 0.036))).toFixed(1)}px`);
     const toPx = (v) => [((v.x + 1) / 2) * W, ((1 - v.y) / 2) * H];
     bubbles.forEach((b) => {
       const [x, y] = toPx(_v.copy(b.anchor).project(camera));
