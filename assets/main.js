@@ -2,10 +2,10 @@
    Site config — edit these to make the site yours
    ============================================================ */
 const SITE = {
-  name: "Mira Solenne",
+  name: "Geli",
   currency: "€",
-  instagram: "https://instagram.com/",
-  email: "studio@example.com",
+  instagram: "https://instagram.com/gelarehkb",
+  email: "gelarehkbi@yahoo.com",
 };
 
 const COLLECTIONS = [
@@ -359,11 +359,6 @@ const PAGES = {
         <div class="two-col">
           <div class="portrait reveal">${artSVG(201, "blush", [600, 800])}</div>
           <div class="text-page reveal">
-            <p>${esc(SITE.name)} is a painter working between abstraction and landscape. Her work explores atmosphere, memory and the quiet moments between light and dark.</p>
-            <p>Working primarily in oil on linen, she builds her surfaces slowly in thin, translucent layers — letting colour settle until a feeling, rather than a place, emerges.</p>
-            <p>Alongside her studio practice she releases <a href="edits.html"><u>Micro Edits</u></a>: small, affordable limited editions published a few times a year.</p>
-            <p>Her work has been shown in group and solo exhibitions across Europe and is held in private collections internationally.</p>
-            <p style="color:var(--muted)">Replace this text with your own biography.</p>
           </div>
         </div>
       </div>`;
