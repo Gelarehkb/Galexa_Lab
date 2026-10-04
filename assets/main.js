@@ -14,6 +14,65 @@ nav.addEventListener("click", (e) => {
   if (e.target.closest("a")) { nav.classList.remove("open"); toggle.textContent = "Menu"; }
 });
 
+/* ---------- Hero tiles: a soft grid outside the office windows ---------- */
+// Tiles light up under the cursor (or finger) and fade out over two seconds.
+const tilesCanvas = $(".hero-tiles"), heroEl = $(".hero");
+if (tilesCanvas) {
+  const ctx = tilesCanvas.getContext("2d");
+  const TILE = "#dcefe4", LINE = "rgba(0, 0, 0, .055)", FADE = 2000;
+  const lit = new Map();
+  let size = 48, W = 0, H = 0, ox = 0, oy = 0, dpr = 1, raf = 0, hoverKey = null;
+
+  const draw = () => {
+    raf = 0;
+    const now = performance.now();
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = TILE;
+    for (const [key, t] of lit) {
+      const a = key === hoverKey ? 1 : 1 - (now - t) / FADE;
+      if (a <= 0) { lit.delete(key); continue; }
+      const [c, r] = key.split(",").map(Number);
+      ctx.globalAlpha = a;
+      ctx.fillRect(ox + c * size, oy + r * size, size, size);
+    }
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = LINE;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let x = ox; x <= W; x += size) { ctx.moveTo(Math.round(x) + 0.5, 0); ctx.lineTo(Math.round(x) + 0.5, H); }
+    for (let y = oy; y <= H; y += size) { ctx.moveTo(0, Math.round(y) + 0.5); ctx.lineTo(W, Math.round(y) + 0.5); }
+    ctx.stroke();
+    if (lit.size && !(lit.size === 1 && lit.has(hoverKey))) raf = requestAnimationFrame(draw);
+  };
+  const resizeTiles = () => {
+    dpr = Math.min(devicePixelRatio || 1, 2);
+    W = heroEl.clientWidth; H = heroEl.clientHeight;
+    tilesCanvas.width = W * dpr; tilesCanvas.height = H * dpr;
+    size = W < 768 ? 36 : 48;
+    ox = (W % size) / 2; oy = (H % size) / 2;
+    draw();
+  };
+  const light = (x, y) => {
+    const r = heroEl.getBoundingClientRect();
+    const key = Math.floor((x - r.left - ox) / size) + "," + Math.floor((y - r.top - oy) / size);
+    if (hoverKey && hoverKey !== key) lit.set(hoverKey, performance.now()); // start fading the tile we left
+    hoverKey = key;
+    lit.set(key, performance.now());
+    if (!raf) raf = requestAnimationFrame(draw);
+  };
+  const leave = () => {
+    if (hoverKey) lit.set(hoverKey, performance.now());
+    hoverKey = null;
+    if (!raf) raf = requestAnimationFrame(draw);
+  };
+  heroEl.addEventListener("pointermove", (e) => light(e.clientX, e.clientY));
+  heroEl.addEventListener("pointerleave", leave);
+  heroEl.addEventListener("touchmove", (e) => { const t = e.touches[0]; if (t) light(t.clientX, t.clientY); }, { passive: true });
+  heroEl.addEventListener("touchend", leave, { passive: true });
+  new ResizeObserver(resizeTiles).observe(heroEl);
+}
+
 /* ---------- Opening: reveal the message piece by piece while scrolling ---------- */
 const opening = $(".opening");
 const steps = [...opening.querySelectorAll("[data-step]")];
@@ -42,67 +101,42 @@ if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
   onOpeningScroll();
 }
 
-/* ---------- Value: same team, better hours ---------- */
-// Predicted share of working time spent on repetitive, no-skill tasks, per type of team.
-// Rough estimates from published workplace studies — refined per client in the free call.
-const TEAMS = {
-  admin:     { name: "administration",   share: 0.45 },
-  finance:   { name: "finance",          share: 0.40 },
-  service:   { name: "customer service", share: 0.40 },
-  ops:       { name: "operations",       share: 0.35 },
-  hr:        { name: "HR",               share: 0.35 },
-  sales:     { name: "sales",            share: 0.30 },
-  marketing: { name: "marketing",        share: 0.25 },
-  mixed:     { name: "mixed",            share: 0.30 },
-};
-const AUTOMATABLE = 0.5; // share of that repetitive work AI can typically take over
-const WORK_WEEKS = 46;
-const people = $("#people"), weekH = $("#week"), rate = $("#rate");
-const bar = $(".week-bar");
-let mode = "today";
-
+/* ---------- Value: two inputs, one visual report ---------- */
+// General averages for employers in the region (full- and part-time staff together):
+// about 35 hours a week and €45 labour cost per working hour, over about 44 working weeks.
+const WEEK = 35, RATE = 45;
+const WORK_WEEKS = 44;
+const AUTOMATABLE = 0.5;                 // share of the routine work AI can typically take over
+const RING = 2 * Math.PI * 52;           // circumference of the ring
+const peopleIn = $("#people");
 const fmt = (n) => Math.round(n).toLocaleString("en").replace(/,/g, ".");
+let ringPlayed = false;
 
 function renderValue() {
-  const team = TEAMS[$('input[name="team"]:checked').value];
-  const p = +people.value, week = +weekH.value, r = +rate.value;
-  $("#peopleOut").textContent = p;
-  $("#weekOut").textContent = week + " h";
-  $("#rateOut").textContent = "€" + r;
+  const people = +peopleIn.value;
+  const share = +$('input[name="work"]:checked').value;  // routine share of the week (our estimate per type of work)
+  const perPerson = WEEK * share * AUTOMATABLE;         // hours back per person, per week
+  const moved = people * perPerson * WORK_WEEKS;
 
-  const repetitive = week * team.share;          // predicted hours per person per week
-  const freed = repetitive * AUTOMATABLE;
-  $("#predicted").textContent = "\u2248 " + (Math.round(repetitive * 2) / 2).toString().replace(".", ",") + " h";
-  $("#weekLen").textContent = week;
-  $("#teamName").textContent = team.name;
+  $("#peopleOut").innerHTML = `<b>${people}</b> ${people === 1 ? "person" : "people"}`;
+  $("#perPerson").textContent = (Math.round(perPerson * 2) / 2).toString().replace(".", ",") + " h";
+  $("#moved").textContent = fmt(moved) + " h";
+  $("#worth").textContent = "€" + fmt(moved * RATE);
 
-  const busy = mode === "today" ? repetitive : repetitive - freed;
-  const moved = mode === "today" ? 0 : freed;
-  const pct = (x) => `${(x / week) * 100}%`;
-  bar.querySelector(".seg-busy").style.width = pct(busy);
-  bar.querySelector(".seg-analysis").style.width = pct(moved / 3);
-  bar.querySelector(".seg-clients").style.width = pct(moved / 3);
-  bar.querySelector(".seg-ideas").style.width = pct(moved / 3);
-  bar.querySelector(".seg-core").style.width = pct(week - repetitive);
-
-  $("#spend").textContent = "€" + fmt(p * repetitive * r * WORK_WEEKS);
-  $("#moved").textContent = fmt(p * freed * WORK_WEEKS) + " h";
+  // ring: whole circle = the week; light arc = routine work; mint arc = the part AI frees up
+  const busyLen = RING * share, freeLen = ringPlayed ? busyLen * AUTOMATABLE : 0;
+  $(".r-busy").style.strokeDasharray = `${busyLen} ${RING}`;
+  $(".r-free").style.strokeDasharray = `${freeLen} ${RING}`;
 }
-[people, weekH, rate].forEach((el) => el.addEventListener("input", renderValue));
-document.querySelectorAll('input[name="team"]').forEach((el) => el.addEventListener("change", renderValue));
-document.querySelectorAll(".week-toggle button").forEach((b) => b.addEventListener("click", () => {
-  mode = b.dataset.mode;
-  document.querySelectorAll(".week-toggle button").forEach((x) => x.classList.toggle("active", x === b));
-  renderValue();
-}));
+peopleIn.addEventListener("input", renderValue);
+document.querySelectorAll('input[name="work"]').forEach((el) => el.addEventListener("change", renderValue));
 renderValue();
 
-// Show the shift once, the first time the section comes into view
 new IntersectionObserver(([e], io) => {
   if (!e.isIntersecting) return;
   io.disconnect();
-  setTimeout(() => $('.week-toggle [data-mode="flow"]').click(), 900);
-}, { threshold: 0.5 }).observe($(".week"));
+  setTimeout(() => { ringPlayed = true; renderValue(); }, 600);
+}, { threshold: 0.5 }).observe($(".ring"));
 
 /* ---------- Contact form ---------- */
 // Works out of the box on Netlify (Netlify Forms picks up data-netlify="true").
@@ -138,9 +172,8 @@ $("#year").textContent = new Date().getFullYear();
 /* ---------- Scroll reveal: every text and block appears one after another ---------- */
 const REVEAL = [
   ".statement p", ".section-title", ".intro", ".solution",
-  ".team-type", ".value-inputs > label", ".week-toggle", ".predict", ".week-title", ".week-bar", ".legend",
-  ".value-results > div", ".note",
-  "#contact .center", "form.contact > .field", "form.contact > .btn", ".form-consent",
+  ".team-size", ".chips", ".ring-wrap", ".stats > div", ".note",
+  "#contact .center", "form.contact > .field", "form.contact > .btn-icon", ".form-consent",
   ".site-footer > *",
 ].join(",");
 const revealEls = [...document.querySelectorAll(REVEAL)];

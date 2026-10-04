@@ -5,6 +5,8 @@
    to focused, creative work. Falls back to office.js if WebGL fails.
    ============================================================ */
 (async () => {
+  // Minimal towers around the office. Set to false for a clean background.
+  const SHOW_SKYLINE = true;
   const host = document.getElementById("office");
   const target = document.querySelector(".office-target");
   if (!host || !target) return;
@@ -50,7 +52,7 @@
   /* ---------- Scene, light, camera ---------- */
   const SKY = 0xeef0f2;
   const scene = new THREE.Scene();
-  scene.fog = new THREE.Fog(SKY, 56, 122);
+  if (SHOW_SKYLINE) scene.fog = new THREE.Fog(0xf1eff0, 46, 92);
   const pmrem = new THREE.PMREMGenerator(renderer);
   scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
 
@@ -58,7 +60,7 @@
   const sun = new THREE.DirectionalLight(0xfff3e4, 1.7);
   sun.position.set(-5, 12, 6);
   sun.castShadow = true;
-  sun.shadow.mapSize.set(2048, 2048);
+  sun.shadow.mapSize.set(4096, 4096);
   Object.assign(sun.shadow.camera, { left: -9, right: 9, top: 9, bottom: -9, near: 1, far: 32 });
   sun.shadow.bias = -0.0004;
   sun.shadow.normalBias = 0.02;
@@ -191,7 +193,7 @@
     sofa: M("#e3eadf", { roughness: 0.9 }),
     frame: M("#f4f5f6", { roughness: 0.25, metalness: 0.5 }),
     glass: new THREE.MeshPhysicalMaterial({
-      color: "#d7e7ee", transparent: true, opacity: 0.16, roughness: 0.04, metalness: 0,
+      color: "#d7e7ee", transparent: true, opacity: 0.3, vertexColors: true, roughness: 0.04, metalness: 0,
       envMapIntensity: 1.5, side: THREE.DoubleSide, depthWrite: false,
     }),
   };
@@ -224,106 +226,66 @@
     geo.translate(0, -0.42, 0);
     add(scene, geo, mat.floor).castShadow = false;
 
-    const pos = [], idx = [];
+    // glass that fades out toward the top instead of ending in a hard edge
+    const pos = [], idx = [], col = [];
     rim.forEach(([x, z], i) => {
       pos.push(x, 0, z, x, wallH[i], z);
+      col.push(1, 1, 1, 1, 1, 1, 1, 0);
       const a = i * 2, b = ((i + 1) % NR) * 2;
       idx.push(a, b, a + 1, b, b + 1, a + 1);
     });
     const glassGeo = new THREE.BufferGeometry();
     glassGeo.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
+    glassGeo.setAttribute("color", new THREE.Float32BufferAttribute(col, 4));
     glassGeo.setIndex(idx);
     glassGeo.computeVertexNormals();
     const glass = new THREE.Mesh(glassGeo, mat.glass);
     glass.renderOrder = 2;
     scene.add(glass);
 
-    const top = new THREE.CatmullRomCurve3(rim.map(([x, z], i) => V(x, wallH[i], z)), true);
-    const base = new THREE.CatmullRomCurve3(rim.map(([x, z]) => V(x, 0.02, z)), true);
-    add(scene, new THREE.TubeGeometry(top, 500, 0.022, 8, true), mat.frame);
-    add(scene, new THREE.TubeGeometry(base, 500, 0.016, 6, true), mat.frame);
-    for (let i = 0; i < NR; i += 9) {
-      const p = add(scene, cyl, mat.frame, rim[i][0], wallH[i] / 2, rim[i][1]);
-      p.scale.set(0.014, wallH[i], 0.014);
-    }
   }
 
-  /* ---------- Skyline: an idealised, minimal pastel city ---------- */
-  {
+  /* ---------- Skyline: tall, New York-style towers in soft pastels ---------- */
+  const clouds = [];
+  if (SHOW_SKYLINE) {
     const { mergeGeometries } = await import("three/addons/utils/BufferGeometryUtils.js");
-    const windowTex = canvasTex(64, 64, (g) => {
-      g.fillStyle = "#ffffff"; g.fillRect(0, 0, 64, 64);
-      g.fillStyle = "#e9ecf0";
-      for (let x = 6; x < 64; x += 16) g.fillRect(x, 0, 5, 64);
-    });
-    windowTex.wrapS = windowTex.wrapT = THREE.RepeatWrapping;
-    const BLD = ["#f4f2ee", "#eff1f4", "#f3eff0", "#eff3f0", "#f5f1ea", "#edf0f4"];
+    const BLD = ["#f3f1f2", "#eeecef", "#f2eff1", "#ebe8ec", "#f4f2f1"];
     const parts = BLD.map(() => []);
-
-    const BASE = -90;
-    function block(w, h, d, x, y, z, k) {
+    const BASE = -95;
+    const block = (w, h, d, x, y, z, k) => {
       const geo = new THREE.BoxGeometry(w, h, d);
-      const uv = geo.attributes.uv;
-      for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * Math.max(w, d) / 1.6, uv.getY(i) * h / 1.6);
       geo.translate(x, y + h / 2, z);
       parts[k].push(geo);
-    }
-
+    };
+    // Minimal towers on every side. They rise from far below: tall behind the office,
+    // mid-height at the sides, and in front their tops stay below the office floor.
     function tower(x, z, topY) {
       const k = Math.floor(rnd() * BLD.length);
-      const w = 0.6 + rnd() * 0.65, d = 0.6 + rnd() * 0.65;   // slim footprints
+      const w = 0.45 + rnd() * 0.5, d = 0.45 + rnd() * 0.5;
       const H = topY - BASE;
-      const style = rnd();
-      if (style < 0.35) {                       // stepped crown, flat top
-        block(w, H * 0.9, d, x, BASE, z, k);
-        block(w * 0.74, H * 0.06, d * 0.74, x, BASE + H * 0.9, z, k);
-        block(w * 0.5, H * 0.04, d * 0.5, x, BASE + H * 0.96, z, k);
-      } else if (style < 0.6) {                 // tower on a wider base
-        block(w * 1.3, H * 0.55, d * 1.3, x, BASE, z, k);
-        block(w * 0.85, H * 0.45, d * 0.85, x, BASE + H * 0.55, z, k);
-      } else {                                  // plain slim slab
+      if (rnd() < 0.3) {                         // one quiet setback
+        block(w, H * 0.88, d, x, BASE, z, k);
+        block(w * 0.66, H * 0.12, d * 0.66, x, BASE + H * 0.88, z, k);
+      } else {
         block(w, H, d, x, BASE, z, k);
       }
     }
-    // Screen-aligned rows behind the office. The tops are placed so the
-    // skyline forms a soft silhouette against the sky (v = height on screen).
-    for (let u = -9; u > -92; u -= 1.9) {
-      for (let h = -100; h < 75; h += 1.7) {
-        if (rnd() < 0.06) continue;
-        const uu = u + (rnd() - 0.5) * 1.2, hh = h + (rnd() - 0.5) * 1.2;
-        const x = (uu + hh) / Math.SQRT2, z = (uu - hh) / Math.SQRT2;
-        if (Math.hypot(x, z) < 10.5) continue;
-        const depth = Math.min(1, (-u - 10) / 60);
-        const vTop = 3 + rnd() * 4.5 + depth * 2 + (rnd() < 0.15 ? 2 + rnd() * 2.5 : 0); // tall, with extra-tall landmarks
-        tower(x, z, (vTop + 0.5 * uu) / 0.866);
-      }
+    for (let i = 0; i < 130; i++) {
+      const th = rnd() * Math.PI * 2, r = 10 + Math.pow(rnd(), 1.15) * 42;
+      const x = Math.cos(th) * r, z = Math.sin(th) * r;
+      const facing = (x + z) / (r * Math.SQRT2);          // -1 behind … +1 in front
+      const u = (x + z) / Math.SQRT2;
+      const backTop = (1.5 + rnd() * 5 + 0.5 * u) / 0.866; // screen-height based, like a skyline
+      const frontTop = -3 - rnd() * 9;                     // stays under the floor
+      const t = smooth(-0.25, 0.55, facing);
+      tower(x, z, backTop * (1 - t) + frontTop * t);
     }
     parts.forEach((list, k) => {
       if (!list.length) return;
-      const m = new THREE.Mesh(mergeGeometries(list.map((g) => g.index ? g.toNonIndexed() : g)),
-        new THREE.MeshStandardMaterial({ color: BLD[k], map: windowTex, roughness: 1, envMapIntensity: 0.4, emissive: BLD[k], emissiveIntensity: 0.3 }));
-      scene.add(m);
+      scene.add(new THREE.Mesh(mergeGeometries(list.map((g) => g.toNonIndexed())),
+        new THREE.MeshStandardMaterial({ color: BLD[k], roughness: 1, envMapIntensity: 0.4, emissive: BLD[k], emissiveIntensity: 0.5, transparent: true, opacity: 0.82 })));
     });
-
-    // Soft drifting clouds
-    const cloudMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.8, fog: false, depthWrite: false });
-    clouds = [];
-    for (let c = 0; c < 6; c++) {
-      const g = new THREE.Group();
-      for (let k = 0; k < 4; k++) {
-        const s = new THREE.Mesh(sph, cloudMat);
-        s.position.set(k * 1.2 - 1.8, rnd() * 0.4, (rnd() - 0.5) * 0.8);
-        s.scale.set(1.1 + rnd() * 0.6, 0.55 + rnd() * 0.3, 0.9);
-        g.add(s);
-      }
-      const u = -60 - rnd() * 15, hh = -70 + c * 22 + rnd() * 8;
-      g.position.set((u + hh) / Math.SQRT2, (8.5 + rnd() * 2 + 0.5 * u) / 0.866, (u - hh) / Math.SQRT2);
-      g.userData.speed = 0.25 + rnd() * 0.25;
-      scene.add(g);
-      clouds.push(g);
-    }
   }
-  var clouds;
 
   /* ---------- Furniture ---------- */
   function roundedRect(w, d, r) {

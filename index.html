@@ -1,11 +1,11 @@
 <!doctype html>
-<html lang="en" class="no-js">
+<html lang="en" class="no-js" data-buttons="metal"><!-- button design: "metal" (design 2) or "arrow" (design 1) -->
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Galexa Lab — Simple AI for everyday work</title>
   <meta name="description" content="Galexa Lab builds simple AI workflows that take repetitive tasks off your plate, so your team can think clearly and stay creative." />
-  <script>document.documentElement.className = "js";</script>
+  <script>document.documentElement.classList.replace("no-js", "js");</script>
   <link rel="stylesheet" href="assets/style.css" />
   <script>
     // three.js comes from our own server. Opened straight from disk (file://) browsers
@@ -27,7 +27,7 @@
       <nav class="nav">
         <a href="#solutions">Solutions</a>
         <a href="#value">Value</a>
-        <a href="#contact" class="nav-cta">Book a free call</a>
+        <a href="#contact" class="btn-icon sm nav-cta"><span class="label">Book a free call</span><span class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></span></a>
       </nav>
       <button class="menu-toggle" aria-label="Open menu" aria-expanded="false">Menu</button>
     </div>
@@ -37,6 +37,7 @@
 
     <!-- Hero: only the animated 3D office over the skyline -->
     <section class="hero">
+      <!-- tile grid backdrop (off): <canvas class="hero-tiles" aria-hidden="true"></canvas> -->
       <div id="office" class="office"></div>
       <div class="hero-fade" aria-hidden="true"></div>
       <div class="hero-inner">
@@ -55,7 +56,7 @@
         </h1>
         <p class="lead" data-step>Galexa Lab takes the repetitive tasks off your plate with simple AI workflows, so you and your team can keep a clear mind and spend your energy on creative work instead of manual work.</p>
         <div class="actions" data-step>
-          <a href="#contact" class="btn">Book a free call</a>
+          <a href="#contact" class="btn-icon"><span class="label">Book a free call</span><span class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></span></a>
           <a href="#solutions" class="link">See what we automate →</a>
         </div>
       </div>
@@ -104,77 +105,42 @@
       </div>
     </section>
 
-    <!-- Value: same payroll, better use of it -->
+    <!-- Value: two inputs, one visual report -->
     <section id="value" class="section band">
       <div class="wrap">
         <h2 class="section-title">Same team. Better hours.</h2>
-        <p class="intro">You already pay for every hour your team works. The question is what those hours are spent on. AI takes the repetitive part — your people keep their hours for the work only they can do.</p>
 
-        <div class="value">
-          <div class="value-inputs">
-            <fieldset class="team-type">
-              <legend>Type of team</legend>
-              <label><input type="radio" name="team" value="admin" checked /><span>Administration</span></label>
-              <label><input type="radio" name="team" value="finance" /><span>Finance</span></label>
-              <label><input type="radio" name="team" value="service" /><span>Customer service</span></label>
-              <label><input type="radio" name="team" value="ops" /><span>Operations</span></label>
-              <label><input type="radio" name="team" value="hr" /><span>HR</span></label>
-              <label><input type="radio" name="team" value="sales" /><span>Sales</span></label>
-              <label><input type="radio" name="team" value="marketing" /><span>Marketing</span></label>
-              <label><input type="radio" name="team" value="mixed" /><span>Mixed team</span></label>
-            </fieldset>
-            <label>
-              <span>People on your team</span>
-              <output id="peopleOut">5</output>
-              <input type="range" id="people" min="1" max="100" value="5" />
+        <div class="report">
+          <div class="controls">
+            <label class="team-size">
+              <span class="q">Your team</span>
+              <output id="peopleOut"><b>10</b> people</output>
+              <input type="range" id="people" min="1" max="200" value="10" aria-label="Number of people on your team" />
             </label>
-            <label>
-              <span>Average working hours per person per week</span>
-              <output id="weekOut">40 h</output>
-              <input type="range" id="week" min="10" max="60" value="40" />
-            </label>
-            <label>
-              <span>Average cost per hour</span>
-              <output id="rateOut">€40</output>
-              <input type="range" id="rate" min="15" max="120" step="5" value="40" />
-            </label>
+            <div class="chips" role="radiogroup" aria-label="Type of work">
+              <label><input type="radio" name="work" value="0.45" checked /><span>Office &amp; admin</span></label>
+              <label><input type="radio" name="work" value="0.4" /><span>Customer service</span></label>
+              <label><input type="radio" name="work" value="0.28" /><span>Sales &amp; marketing</span></label>
+              <label><input type="radio" name="work" value="0.33" /><span>Mixed</span></label>
+            </div>
           </div>
 
-          <div class="week">
-            <div class="week-toggle" role="tablist">
-              <button class="active" data-mode="today" role="tab">Today</button>
-              <button data-mode="flow" role="tab">With Galexa Lab</button>
-            </div>
-            <p class="predict"><span class="predict-num" id="predicted">0 h</span> of a <span id="weekLen">40</span>-hour week predicted as repetitive, no-skill work for a <span id="teamName">administration</span> team</p>
-            <p class="week-title">One week, per person</p>
-            <div class="week-bar" aria-hidden="true">
-              <span class="seg seg-busy"></span>
-              <span class="seg seg-analysis"></span>
-              <span class="seg seg-clients"></span>
-              <span class="seg seg-ideas"></span>
-              <span class="seg seg-core"></span>
-            </div>
-            <ul class="legend">
-              <li><i class="seg-busy"></i>Repetitive tasks</li>
-              <li><i class="seg-analysis"></i>Analysis</li>
-              <li><i class="seg-clients"></i>Clients &amp; communication</li>
-              <li><i class="seg-ideas"></i>Innovation</li>
-              <li><i class="seg-core"></i>Core work</li>
-            </ul>
+          <div class="ring-wrap">
+            <svg class="ring" viewBox="0 0 120 120" aria-hidden="true">
+              <circle class="r-track" cx="60" cy="60" r="52" />
+              <circle class="r-busy" cx="60" cy="60" r="52" />
+              <circle class="r-free" cx="60" cy="60" r="52" />
+            </svg>
+            <div class="ring-center"><b id="perPerson">8 h</b><span>back per person<br />of a 35-hour week</span></div>
+          </div>
 
-            <div class="value-results">
-              <div>
-                <span class="value-num" id="spend">€0</span>
-                <span class="value-label">payroll per year that goes into repetitive work today</span>
-              </div>
-              <div>
-                <span class="value-num" id="moved">0 h</span>
-                <span class="value-label">per year moved to analysis, clients and new ideas — same team, no new hires</span>
-              </div>
-            </div>
-            <p class="note">Prediction based on typical shares of routine work (data entry, email, scheduling, reporting, copy-and-paste) for each type of team, drawn from published workplace studies. Assumes about half of that work can be handed to AI and 46 working weeks a year. We check the real numbers for your team in the free call.</p>
+          <div class="stats">
+            <div><b id="moved">0 h</b><span>a year for clients, analysis and new ideas</span></div>
+            <div><b id="worth">€0</b><span>of paid time moved from busywork to valuable work</span></div>
           </div>
         </div>
+
+        <p class="note">Based on an average 35-hour week, €45 per working hour and 44 working weeks a year. Routine shares are estimates — we check your real numbers in the free call.</p>
       </div>
     </section>
 
@@ -190,7 +156,7 @@
           <div class="field"><label for="e">Email</label><input id="e" name="email" type="email" required /></div>
           <div class="field"><label for="c">Company</label><input id="c" name="company" /></div>
           <div class="field"><label for="m">Which task would you like to get rid of?</label><textarea id="m" name="message" required></textarea></div>
-          <button class="btn">Send</button>
+          <button class="btn-icon wide"><span class="label">Send</span><span class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></span></button>
           <p class="form-consent">By sending this form you agree that we use your details to answer your request. See our <a href="privacy.html">privacy policy</a>.</p>
           <p class="form-note" role="status" hidden></p>
         </form>
