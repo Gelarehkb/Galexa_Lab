@@ -199,4 +199,10 @@ if (!("IntersectionObserver" in window) || matchMedia("(prefers-reduced-motion: 
     if (!revealTimer) nextReveal();
   }), { threshold: 0.15, rootMargin: "0px 0px -8% 0px" });
   revealEls.forEach((el) => io.observe(el));
+  // At the very bottom of the page, show whatever is left (the footer can sit inside the trigger margin).
+  addEventListener("scroll", () => {
+    if (innerHeight + scrollY < document.documentElement.scrollHeight - 4) return;
+    revealEls.forEach((el) => { if (!el.classList.contains("in")) queue.add(el); });
+    if (!revealTimer) nextReveal();
+  }, { passive: true });
 }

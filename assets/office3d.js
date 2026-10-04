@@ -665,7 +665,7 @@
       _v.copy(p).applyMatrix4(camera.matrixWorldInverse);
       x0 = Math.min(x0, _v.x); x1 = Math.max(x1, _v.x); y0 = Math.min(y0, _v.y); y1 = Math.max(y1, _v.y);
     }
-    const s = Math.max((x1 - x0) / tw, (y1 - y0) / th) * 1.02 / (PHONE ? 1.35 : 1); // world units per pixel; phones zoom in, trimming the sides
+    const s = Math.max((x1 - x0) / tw, (y1 - y0) / th) * 1.02; // world units per pixel
     const cxv = (x0 + x1) / 2, cyv = (y0 + y1) / 2;
     camera.left = cxv - (tx + tw / 2) * s;
     camera.right = camera.left + W * s;
