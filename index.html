@@ -9,8 +9,8 @@
   <link rel="stylesheet" href="assets/style.css" />
   <script type="importmap">
     { "imports": {
-        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        "three": "./assets/vendor/three/build/three.module.js",
+        "three/addons/": "./assets/vendor/three/examples/jsm/"
     } }
   </script>
 </head>
@@ -57,7 +57,7 @@
     </section>
 
     <!-- Statement -->
-    <section class="wrap statement reveal">
+    <section class="wrap statement">
       <p>Copying data between tools. Answering the same email for the tenth time. Chasing invoices. Building the same report every Monday.</p>
       <p class="muted">None of it is hard. All of it is draining. It fills the week and leaves little room to think.</p>
     </section>
@@ -66,32 +66,32 @@
     <section id="solutions" class="wrap section">
       <h2 class="section-title">What we take off your plate</h2>
       <div class="solutions">
-        <article class="solution reveal">
+        <article class="solution">
           <span class="num">01</span>
           <h3>Inbox &amp; email</h3>
           <p>Sort, label and draft replies to routine emails automatically. You only read what needs you.</p>
         </article>
-        <article class="solution reveal">
+        <article class="solution">
           <span class="num">02</span>
           <h3>Customer questions</h3>
           <p>A friendly assistant that answers common questions on your website or chat, around the clock.</p>
         </article>
-        <article class="solution reveal">
+        <article class="solution">
           <span class="num">03</span>
           <h3>Documents &amp; data entry</h3>
           <p>Read invoices, orders and forms, and put the information where it belongs — no more copy and paste.</p>
         </article>
-        <article class="solution reveal">
+        <article class="solution">
           <span class="num">04</span>
           <h3>Scheduling &amp; follow-ups</h3>
           <p>Appointments, reminders and follow-up messages that happen on time, without anyone remembering to send them.</p>
         </article>
-        <article class="solution reveal">
+        <article class="solution">
           <span class="num">05</span>
           <h3>Reports &amp; summaries</h3>
           <p>Weekly numbers, meeting notes and status updates, written and delivered for you.</p>
         </article>
-        <article class="solution reveal">
+        <article class="solution">
           <span class="num">06</span>
           <h3>Content &amp; social</h3>
           <p>First drafts for posts, product texts and newsletters in your tone of voice, ready for a final touch.</p>
@@ -105,17 +105,28 @@
         <h2 class="section-title">Same team. Better hours.</h2>
         <p class="intro">You already pay for every hour your team works. The question is what those hours are spent on. AI takes the repetitive part — your people keep their hours for the work only they can do.</p>
 
-        <div class="value reveal">
+        <div class="value">
           <div class="value-inputs">
+            <fieldset class="team-type">
+              <legend>Type of team</legend>
+              <label><input type="radio" name="team" value="admin" checked /><span>Administration</span></label>
+              <label><input type="radio" name="team" value="finance" /><span>Finance</span></label>
+              <label><input type="radio" name="team" value="service" /><span>Customer service</span></label>
+              <label><input type="radio" name="team" value="ops" /><span>Operations</span></label>
+              <label><input type="radio" name="team" value="hr" /><span>HR</span></label>
+              <label><input type="radio" name="team" value="sales" /><span>Sales</span></label>
+              <label><input type="radio" name="team" value="marketing" /><span>Marketing</span></label>
+              <label><input type="radio" name="team" value="mixed" /><span>Mixed team</span></label>
+            </fieldset>
             <label>
               <span>People on your team</span>
               <output id="peopleOut">5</output>
-              <input type="range" id="people" min="1" max="50" value="5" />
+              <input type="range" id="people" min="1" max="100" value="5" />
             </label>
             <label>
-              <span>Hours per person per week on repetitive tasks</span>
-              <output id="hoursOut">8</output>
-              <input type="range" id="hours" min="1" max="20" value="8" />
+              <span>Average working hours per person per week</span>
+              <output id="weekOut">40 h</output>
+              <input type="range" id="week" min="10" max="60" value="40" />
             </label>
             <label>
               <span>Average cost per hour</span>
@@ -129,7 +140,8 @@
               <button class="active" data-mode="today" role="tab">Today</button>
               <button data-mode="flow" role="tab">With Galexa Lab</button>
             </div>
-            <p class="week-title">A 40-hour week, per person</p>
+            <p class="predict"><span class="predict-num" id="predicted">0 h</span> of a <span id="weekLen">40</span>-hour week predicted as repetitive, no-skill work for a <span id="teamName">administration</span> team</p>
+            <p class="week-title">One week, per person</p>
             <div class="week-bar" aria-hidden="true">
               <span class="seg seg-busy"></span>
               <span class="seg seg-analysis"></span>
@@ -155,7 +167,7 @@
                 <span class="value-label">per year moved to analysis, clients and new ideas — same team, no new hires</span>
               </div>
             </div>
-            <p class="note">Estimate, assuming about half of the repetitive work can be handed to AI and 46 working weeks a year.</p>
+            <p class="note">Prediction based on typical shares of routine work (data entry, email, scheduling, reporting, copy-and-paste) for each type of team, drawn from published workplace studies. Assumes about half of that work can be handed to AI and 46 working weeks a year. We check the real numbers for your team in the free call.</p>
           </div>
         </div>
       </div>
@@ -166,13 +178,16 @@
       <div class="wrap narrow">
         <h2 class="section-title">Let's free up your week</h2>
         <p class="center muted">Book a free, no-pressure call. Tell us one task you'd love to never do again.</p>
-        <form class="contact">
+        <form class="contact" name="contact" method="POST" action="/" data-netlify="true" netlify-honeypot="website">
+          <input type="hidden" name="form-name" value="contact" />
+          <p class="hp" aria-hidden="true"><label>Leave this empty <input name="website" tabindex="-1" autocomplete="off" /></label></p>
           <div class="field"><label for="n">Name</label><input id="n" name="name" required /></div>
           <div class="field"><label for="e">Email</label><input id="e" name="email" type="email" required /></div>
           <div class="field"><label for="c">Company</label><input id="c" name="company" /></div>
           <div class="field"><label for="m">Which task would you like to get rid of?</label><textarea id="m" name="message" required></textarea></div>
           <button class="btn">Send</button>
-          <p class="form-note" hidden>Thank you — we'll be in touch within one working day.</p>
+          <p class="form-consent">By sending this form you agree that we use your details to answer your request. See our <a href="privacy.html">privacy policy</a>.</p>
+          <p class="form-note" role="status" hidden></p>
         </form>
       </div>
     </section>
@@ -183,8 +198,8 @@
     <span>© <span id="year"></span> Galexa Lab</span>
     <nav>
       <a href="mailto:hello@example.com">hello@example.com</a>
-      <a href="#">Impressum</a>
-      <a href="#">Privacy</a>
+      <a href="impressum.html">Impressum</a>
+      <a href="privacy.html">Privacy</a>
       <a href="#" target="_blank" rel="noopener">LinkedIn</a>
     </nav>
   </footer>

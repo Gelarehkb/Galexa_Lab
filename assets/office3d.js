@@ -593,11 +593,11 @@
     keyboard(g, -0.35, 0.45);
     const leafMat = new THREE.MeshStandardMaterial({ color: "#b7c3b3", roughness: 0.7, envMapIntensity: 0.6 });
     const pl = plant(g, 0.72, 0.765, 0.05, leafMat);
-    // lots of paper: two stacks in front of each person
-    const stacks = [
-      [paperStack(g, -0.5, -0.33), paperStack(g, -0.12, -0.48)],
-      [paperStack(g, 0.5, 0.33), paperStack(g, 0.12, 0.48)],
-    ];
+    // lots of paper on every other table: two stacks in front of each person
+    const papers = k % 2 === 0;
+    const stacks = papers
+      ? [[paperStack(g, -0.5, -0.33), paperStack(g, -0.12, -0.48)], [paperStack(g, 0.5, 0.33), paperStack(g, 0.12, 0.48)]]
+      : [[], []];
 
     const moods = [nextMood(), nextMood()];
     const chairMat = M(CHAIRS[k % CHAIRS.length], { roughness: 0.75 });

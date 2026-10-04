@@ -6,35 +6,46 @@ A minimal one-page website for **Galexa Lab**: simple AI workflows that take rep
 
 ## What's on the page
 
-- **Hero:** "Less busywork. More flow." with a call to book a free call
-- **Solutions:** inbox and email, customer questions, documents and data entry, scheduling, reports, content
-- **How it works:** Talk → Map → Build → Flow
-- **Time-back calculator:** estimates the hours per year a team could save
-- **FAQ** and **contact form**
+- **Hero:** a 3D office (three.js) over a pastel skyline. 34 people start overwhelmed; hovering or touching them switches them to focused work, blows their paper away and ticks off their to-do screens
+- **Opening:** "Less busywork. More flow." appears line by line while scrolling
+- **Solutions:** six areas we automate
+- **Value — "Same team. Better hours.":** predicts the repetitive share of a team's week by team type and shows the payroll it costs
+- **Contact form**, plus Impressum and privacy pages
 
 ## Tech
 
-Plain HTML, CSS and JavaScript. No framework, no build step, no dependencies.
+Plain HTML, CSS and JavaScript. No build step. three.js is bundled in `assets/vendor/three` (MIT licence), so nothing loads from third-party servers.
 
 ```
-index.html         page content
-assets/style.css   styles (light, minimal, responsive)
-assets/main.js     hero background, mobile menu, calculator, form, scroll fade-in
+index.html          page content
+impressum.html      legal notice (fill in the placeholders)
+privacy.html        privacy policy (fill in the placeholders)
+assets/style.css    styles
+assets/main.js      menu, scroll reveals, value section, contact form
+assets/office3d.js  3D office scene
+assets/office.js    flat SVG fallback when WebGL is unavailable
+assets/vendor/      three.js
 ```
 
 ## Run locally
 
-Open `index.html` in a browser.
+Browsers block JavaScript modules opened straight from disk, so use a small local server:
+
+```
+python3 -m http.server 8000
+```
+
+Then open http://localhost:8000. (Opening `index.html` directly shows the flat fallback instead of the 3D scene.)
 
 ## Deploy
 
-1. In the repo, go to **Settings → Pages**.
-2. Set the source to the `main` branch and the `/ (root)` folder.
-3. Save. The site is published at `https://gelarehkb.github.io/Galexa_Lab/`.
+Any static host works. On **Netlify** the contact form works out of the box (Netlify Forms). On other hosts, set the form's `action` in `index.html` to a form service such as Formspree.
+
+GitHub Pages: **Settings → Pages**, source `main`, folder `/ (root)`.
 
 ## To do before launch
 
 - [ ] Replace the placeholder email and LinkedIn link in the footer
-- [ ] Add Impressum and Privacy pages (legally required in Germany)
-- [ ] Connect the contact form to a form service (e.g. Formspree)
+- [ ] Fill in the placeholders in `impressum.html` and `privacy.html` and have them checked
+- [ ] Deploy on Netlify, or point the contact form at a form service
 - [ ] Optional: connect a custom domain

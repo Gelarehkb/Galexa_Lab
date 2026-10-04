@@ -43,36 +43,53 @@ if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
 }
 
 /* ---------- Value: same team, better hours ---------- */
-const AUTOMATABLE = 0.5; // share of repetitive work AI can typically take over
+// Predicted share of working time spent on repetitive, no-skill tasks, per type of team.
+// Rough estimates from published workplace studies — refined per client in the free call.
+const TEAMS = {
+  admin:     { name: "administration",   share: 0.45 },
+  finance:   { name: "finance",          share: 0.40 },
+  service:   { name: "customer service", share: 0.40 },
+  ops:       { name: "operations",       share: 0.35 },
+  hr:        { name: "HR",               share: 0.35 },
+  sales:     { name: "sales",            share: 0.30 },
+  marketing: { name: "marketing",        share: 0.25 },
+  mixed:     { name: "mixed",            share: 0.30 },
+};
+const AUTOMATABLE = 0.5; // share of that repetitive work AI can typically take over
 const WORK_WEEKS = 46;
-const WEEK = 40;
-const people = $("#people"), hours = $("#hours"), rate = $("#rate");
+const people = $("#people"), weekH = $("#week"), rate = $("#rate");
 const bar = $(".week-bar");
 let mode = "today";
 
-const euro = (n) => "€" + Math.round(n).toLocaleString("en").replace(/,/g, ".");
+const fmt = (n) => Math.round(n).toLocaleString("en").replace(/,/g, ".");
 
 function renderValue() {
-  const p = +people.value, h = +hours.value, r = +rate.value;
+  const team = TEAMS[$('input[name="team"]:checked').value];
+  const p = +people.value, week = +weekH.value, r = +rate.value;
   $("#peopleOut").textContent = p;
-  $("#hoursOut").textContent = h;
+  $("#weekOut").textContent = week + " h";
   $("#rateOut").textContent = "€" + r;
 
-  const freed = h * AUTOMATABLE;               // hours per person per week
-  const busy = mode === "today" ? h : h - freed;
+  const repetitive = week * team.share;          // predicted hours per person per week
+  const freed = repetitive * AUTOMATABLE;
+  $("#predicted").textContent = "\u2248 " + (Math.round(repetitive * 2) / 2).toString().replace(".", ",") + " h";
+  $("#weekLen").textContent = week;
+  $("#teamName").textContent = team.name;
+
+  const busy = mode === "today" ? repetitive : repetitive - freed;
   const moved = mode === "today" ? 0 : freed;
-  const core = WEEK - h;
-  const pct = (x) => `${(x / WEEK) * 100}%`;
+  const pct = (x) => `${(x / week) * 100}%`;
   bar.querySelector(".seg-busy").style.width = pct(busy);
   bar.querySelector(".seg-analysis").style.width = pct(moved / 3);
   bar.querySelector(".seg-clients").style.width = pct(moved / 3);
   bar.querySelector(".seg-ideas").style.width = pct(moved / 3);
-  bar.querySelector(".seg-core").style.width = pct(core);
+  bar.querySelector(".seg-core").style.width = pct(week - repetitive);
 
-  $("#spend").textContent = euro(p * h * r * WORK_WEEKS);
-  $("#moved").textContent = Math.round(p * freed * WORK_WEEKS).toLocaleString("en").replace(/,/g, ".") + " h";
+  $("#spend").textContent = "€" + fmt(p * repetitive * r * WORK_WEEKS);
+  $("#moved").textContent = fmt(p * freed * WORK_WEEKS) + " h";
 }
-[people, hours, rate].forEach((el) => el.addEventListener("input", renderValue));
+[people, weekH, rate].forEach((el) => el.addEventListener("input", renderValue));
+document.querySelectorAll('input[name="team"]').forEach((el) => el.addEventListener("change", renderValue));
 document.querySelectorAll(".week-toggle button").forEach((b) => b.addEventListener("click", () => {
   mode = b.dataset.mode;
   document.querySelectorAll(".week-toggle button").forEach((x) => x.classList.toggle("active", x === b));
@@ -88,22 +105,65 @@ new IntersectionObserver(([e], io) => {
 }, { threshold: 0.5 }).observe($(".week"));
 
 /* ---------- Contact form ---------- */
-// Connect to a form service (e.g. Formspree) to actually receive messages.
-$("form.contact").addEventListener("submit", (e) => {
+// Works out of the box on Netlify (Netlify Forms picks up data-netlify="true").
+// On other hosts, set the form's action to a form service such as
+// https://formspree.io/f/<your-id> — this handler posts to whatever action is set.
+const CONTACT_EMAIL = "hello@example.com";
+$("form.contact").addEventListener("submit", async (e) => {
   e.preventDefault();
-  e.target.reset();
-  $(".form-note").hidden = false;
+  const form = e.target, note = $(".form-note"), button = form.querySelector("button");
+  button.disabled = true;
+  note.hidden = true;
+  try {
+    const external = /^https?:/.test(form.getAttribute("action"));
+    const res = await fetch(form.getAttribute("action") || "/", {
+      method: "POST",
+      headers: external
+        ? { Accept: "application/json" }
+        : { "Content-Type": "application/x-www-form-urlencoded" },
+      body: external ? new FormData(form) : new URLSearchParams(new FormData(form)).toString(),
+    });
+    if (!res.ok) throw new Error(res.status);
+    form.reset();
+    note.textContent = "Thank you — we'll be in touch within one working day.";
+  } catch {
+    note.textContent = `Sorry, that didn't go through. Please email us at ${CONTACT_EMAIL}.`;
+  }
+  note.hidden = false;
+  button.disabled = false;
 });
 
 $("#year").textContent = new Date().getFullYear();
 
-/* ---------- Scroll reveal ---------- */
-const els = document.querySelectorAll(".reveal");
-if ("IntersectionObserver" in window) {
-  const io = new IntersectionObserver((entries) => entries.forEach((en) => {
-    if (en.isIntersecting) { en.target.classList.add("in"); io.unobserve(en.target); }
-  }), { threshold: 0.1 });
-  els.forEach((el) => io.observe(el));
+/* ---------- Scroll reveal: every text and block appears one after another ---------- */
+const REVEAL = [
+  ".statement p", ".section-title", ".intro", ".solution",
+  ".team-type", ".value-inputs > label", ".week-toggle", ".predict", ".week-title", ".week-bar", ".legend",
+  ".value-results > div", ".note",
+  "#contact .center", "form.contact > .field", "form.contact > .btn", ".form-consent",
+  ".site-footer > *",
+].join(",");
+const revealEls = [...document.querySelectorAll(REVEAL)];
+revealEls.forEach((el) => el.classList.add("reveal"));
+
+if (!("IntersectionObserver" in window) || matchMedia("(prefers-reduced-motion: reduce)").matches) {
+  revealEls.forEach((el) => el.classList.add("in"));
 } else {
-  els.forEach((el) => el.classList.add("in"));
+  // Elements that scroll into view are queued and shown one by one, in page order.
+  const queue = new Set();
+  let revealTimer = null;
+  const nextReveal = () => {
+    const el = revealEls.find((x) => queue.has(x));
+    if (!el) { revealTimer = null; return; }
+    queue.delete(el);
+    el.classList.add("in");
+    revealTimer = setTimeout(nextReveal, 140);
+  };
+  const io = new IntersectionObserver((entries) => entries.forEach((en) => {
+    if (!en.isIntersecting) return;
+    io.unobserve(en.target);
+    queue.add(en.target);
+    if (!revealTimer) nextReveal();
+  }), { threshold: 0.15, rootMargin: "0px 0px -8% 0px" });
+  revealEls.forEach((el) => io.observe(el));
 }
