@@ -3,12 +3,194 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Start — Geli</title>
-  <meta name="description" content="Paintings and limited-edition Micro Edits by Geli." />
+  <title>Geli — Simple AI for everyday work</title>
+  <meta name="description" content="Geli builds simple AI workflows that take repetitive tasks off your plate, so your team can think clearly and stay creative." />
   <link rel="stylesheet" href="assets/style.css" />
 </head>
-<body data-page="home">
-  <main></main>
+<body>
+
+  <header class="site-header">
+    <div class="wrap header-bar">
+      <a href="#top" class="logo">Geli</a>
+      <nav class="nav">
+        <a href="#solutions">Solutions</a>
+        <a href="#how">How it works</a>
+        <a href="#calculator">Time back</a>
+        <a href="#faq">FAQ</a>
+        <a href="#contact" class="nav-cta">Book a free call</a>
+      </nav>
+      <button class="menu-toggle" aria-label="Open menu" aria-expanded="false">Menu</button>
+    </div>
+  </header>
+
+  <main id="top">
+
+    <!-- Hero -->
+    <section class="hero">
+      <div class="hero-art" aria-hidden="true"></div>
+      <div class="wrap hero-inner">
+        <p class="eyebrow">AI for everyday business</p>
+        <h1>Less busywork.<br />More flow.</h1>
+        <p class="lead">Geli takes the repetitive tasks off your plate with simple AI workflows, so you and your team can keep a clear mind and spend your energy on creative work instead of manual work.</p>
+        <div class="actions">
+          <a href="#contact" class="btn">Book a free call</a>
+          <a href="#solutions" class="link">See what we automate →</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Statement -->
+    <section class="wrap statement reveal">
+      <p>Copying data between tools. Answering the same email for the tenth time. Chasing invoices. Building the same report every Monday.</p>
+      <p class="muted">None of it is hard. All of it is draining. It fills the week and leaves little room to think.</p>
+    </section>
+
+    <!-- Solutions -->
+    <section id="solutions" class="wrap section">
+      <h2 class="section-title">What we take off your plate</h2>
+      <div class="solutions">
+        <article class="solution reveal">
+          <span class="num">01</span>
+          <h3>Inbox &amp; email</h3>
+          <p>Sort, label and draft replies to routine emails automatically. You only read what needs you.</p>
+        </article>
+        <article class="solution reveal">
+          <span class="num">02</span>
+          <h3>Customer questions</h3>
+          <p>A friendly assistant that answers common questions on your website or chat, around the clock.</p>
+        </article>
+        <article class="solution reveal">
+          <span class="num">03</span>
+          <h3>Documents &amp; data entry</h3>
+          <p>Read invoices, orders and forms, and put the information where it belongs — no more copy and paste.</p>
+        </article>
+        <article class="solution reveal">
+          <span class="num">04</span>
+          <h3>Scheduling &amp; follow-ups</h3>
+          <p>Appointments, reminders and follow-up messages that happen on time, without anyone remembering to send them.</p>
+        </article>
+        <article class="solution reveal">
+          <span class="num">05</span>
+          <h3>Reports &amp; summaries</h3>
+          <p>Weekly numbers, meeting notes and status updates, written and delivered for you.</p>
+        </article>
+        <article class="solution reveal">
+          <span class="num">06</span>
+          <h3>Content &amp; social</h3>
+          <p>First drafts for posts, product texts and newsletters in your tone of voice, ready for a final touch.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- How it works -->
+    <section id="how" class="section band">
+      <div class="wrap">
+        <h2 class="section-title">How it works</h2>
+        <ol class="steps">
+          <li class="reveal">
+            <span class="num">01</span>
+            <h3>Talk</h3>
+            <p>A free 30-minute call. You tell us what your week looks like and what drains you.</p>
+          </li>
+          <li class="reveal">
+            <span class="num">02</span>
+            <h3>Map</h3>
+            <p>We pick the one or two tasks where AI saves the most time, and show you exactly what will change.</p>
+          </li>
+          <li class="reveal">
+            <span class="num">03</span>
+            <h3>Build</h3>
+            <p>We set it up inside the tools you already use — email, calendar, spreadsheets, your shop or CRM.</p>
+          </li>
+          <li class="reveal">
+            <span class="num">04</span>
+            <h3>Flow</h3>
+            <p>You get a short walkthrough and ongoing support. It just runs — and you get your time back.</p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+
+    <!-- Calculator -->
+    <section id="calculator" class="section">
+      <div class="wrap">
+        <h2 class="section-title">How much time could you get back?</h2>
+        <div class="calc reveal">
+          <div class="calc-inputs">
+            <label>
+              <span>People on your team</span>
+              <output id="peopleOut">3</output>
+              <input type="range" id="people" min="1" max="50" value="3" />
+            </label>
+            <label>
+              <span>Hours per person per week on repetitive tasks</span>
+              <output id="hoursOut">6</output>
+              <input type="range" id="hours" min="1" max="20" value="6" />
+            </label>
+          </div>
+          <div class="calc-result">
+            <span class="result-num" id="result">0</span>
+            <span class="result-label">hours back per year</span>
+            <p class="note">Rough estimate, assuming about half of those tasks can be automated.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq" class="wrap section narrow">
+      <h2 class="section-title">Questions</h2>
+      <details class="reveal">
+        <summary>Do I need technical knowledge?</summary>
+        <p>No. We do the setup. You just tell us how you work today and approve how it should work tomorrow.</p>
+      </details>
+      <details class="reveal">
+        <summary>Will AI replace my team?</summary>
+        <p>No — it takes over the repetitive parts so your people can focus on the work that needs a human: ideas, relationships and decisions.</p>
+      </details>
+      <details class="reveal">
+        <summary>Which tools do you work with?</summary>
+        <p>Most common ones: Gmail and Outlook, Google Workspace and Microsoft 365, Slack, Notion, Shopify, and many CRMs and accounting tools. Ask us about yours.</p>
+      </details>
+      <details class="reveal">
+        <summary>What about my data?</summary>
+        <p>We only use what a workflow needs, follow GDPR, and can work with EU-hosted services. You decide what the AI may and may not do.</p>
+      </details>
+      <details class="reveal">
+        <summary>How long does it take?</summary>
+        <p>A first workflow is usually running within one to two weeks.</p>
+      </details>
+    </section>
+
+    <!-- Contact -->
+    <section id="contact" class="section band">
+      <div class="wrap narrow">
+        <h2 class="section-title">Let's free up your week</h2>
+        <p class="center muted">Book a free, no-pressure call. Tell us one task you'd love to never do again.</p>
+        <form class="contact">
+          <div class="field"><label for="n">Name</label><input id="n" name="name" required /></div>
+          <div class="field"><label for="e">Email</label><input id="e" name="email" type="email" required /></div>
+          <div class="field"><label for="c">Company</label><input id="c" name="company" /></div>
+          <div class="field"><label for="m">Which task would you like to get rid of?</label><textarea id="m" name="message" required></textarea></div>
+          <button class="btn">Send</button>
+          <p class="form-note" hidden>Thank you — we'll be in touch within one working day.</p>
+        </form>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="wrap site-footer">
+    <span>© <span id="year"></span> Geli</span>
+    <nav>
+      <a href="mailto:hello@example.com">hello@example.com</a>
+      <a href="#">Impressum</a>
+      <a href="#">Privacy</a>
+      <a href="#" target="_blank" rel="noopener">LinkedIn</a>
+    </nav>
+  </footer>
+
   <script src="assets/main.js"></script>
 </body>
 </html>
