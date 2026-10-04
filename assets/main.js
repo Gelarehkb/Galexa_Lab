@@ -81,7 +81,7 @@ let shown = 0, wanted = 0, pumpTimer = null;
 function pump() {
   if (shown >= wanted) { pumpTimer = null; return; }
   steps[shown++].classList.add("shown");
-  pumpTimer = setTimeout(pump, 260); // keep them one after another, even on a fast scroll
+  pumpTimer = setTimeout(pump, 130); // keep them one after another, even on a fast scroll
 }
 function want(n) {
   wanted = Math.max(wanted, Math.min(n, steps.length));
@@ -190,7 +190,7 @@ if (!("IntersectionObserver" in window) || matchMedia("(prefers-reduced-motion: 
     if (!el) { revealTimer = null; return; }
     queue.delete(el);
     el.classList.add("in");
-    revealTimer = setTimeout(nextReveal, 140);
+    revealTimer = setTimeout(nextReveal, 70);
   };
   const io = new IntersectionObserver((entries) => entries.forEach((en) => {
     if (!en.isIntersecting) return;

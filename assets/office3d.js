@@ -523,13 +523,15 @@
   const people = [];
   let moodIdx = 0;
   const nextMood = () => MOOD_ORDER[moodIdx++ % MOOD_ORDER.length];
-  const POD_SCALE = 0.72;
+  // Phones get half the desks, drawn bigger so people and details stay readable.
+  const PHONE = matchMedia("(max-width: 640px)").matches;
+  const POD_SCALE = PHONE ? 1 : 0.72;
+  const INNER = PHONE ? 3 : 6, OUTER = PHONE ? 6 : 11;
   const layout = [];
-  for (let k = 0; k < 6; k++) {                       // inner ring, pointing at the lounge
-    const th = (k / 6) * Math.PI * 2 + 0.4;
+  for (let k = 0; k < INNER; k++) {                   // inner ring, pointing at the lounge
+    const th = (k / INNER) * Math.PI * 2 + 0.4;
     layout.push({ x: Math.cos(th) * 2.45, z: Math.sin(th) * 2.45, rot: Math.PI / 2 - th });
   }
-  const OUTER = 11;
   for (let k = 0; k < OUTER; k++) {                   // outer ring, following the glass
     const th = (k / OUTER) * Math.PI * 2 + 0.1, r = radius(th) * 0.8;
     layout.push({ x: Math.cos(th) * r, z: Math.sin(th) * r, rot: Math.PI - th });
@@ -594,7 +596,7 @@
   });
 
   // A few tall plants along the glass, in the gaps between the outer desks
-  for (const k of [0, 3, 6, 8]) {
+  for (const k of PHONE ? [0, 2, 4] : [0, 3, 6, 8]) {
     const t = ((k + 0.5) / OUTER) * Math.PI * 2 + 0.1, r = radius(t) * 0.82;
     sway.push(plant(scene, Math.cos(t) * r, 0, Math.sin(t) * r, M("#c9dcc6", { roughness: 0.85 }), 2.6));
   }
@@ -663,7 +665,7 @@
       _v.copy(p).applyMatrix4(camera.matrixWorldInverse);
       x0 = Math.min(x0, _v.x); x1 = Math.max(x1, _v.x); y0 = Math.min(y0, _v.y); y1 = Math.max(y1, _v.y);
     }
-    const s = Math.max((x1 - x0) / tw, (y1 - y0) / th) * 1.02; // world units per pixel
+    const s = Math.max((x1 - x0) / tw, (y1 - y0) / th) * 1.02 / (PHONE ? 1.35 : 1); // world units per pixel; phones zoom in, trimming the sides
     const cxv = (x0 + x1) / 2, cyv = (y0 + y1) / 2;
     camera.left = cxv - (tx + tw / 2) * s;
     camera.right = camera.left + W * s;
@@ -672,7 +674,7 @@
     camera.bottom = camera.top - H * s;
     camera.updateProjectionMatrix();
 
-    host.style.setProperty("--bub", `${Math.max(18, Math.min(36, tw * 0.03)).toFixed(1)}px`);
+    host.style.setProperty("--bub", `${Math.max(PHONE ? 26 : 18, Math.min(36, tw * (PHONE ? 0.07 : 0.03))).toFixed(1)}px`);
     const toPx = (v) => [((v.x + 1) / 2) * W, ((1 - v.y) / 2) * H];
     bubbles.forEach((b) => {
       const [x, y] = toPx(_v.copy(b.anchor).project(camera));
@@ -718,12 +720,16 @@
   const totalEl = document.getElementById("flowTotal");
   const touchy = matchMedia("(hover: none)").matches;
   if (totalEl) totalEl.textContent = total;
-  let releaseTimer;
 
+  // Touch screens: each tap brings the next third of the team into flow (1/3, 2/3, 3/3),
+  // the fourth tap moves on to the next section.
+  let stage = 0;
   function update() {
     const n = people.filter((p) => p.target === 1).length;
     if (countEl) countEl.textContent = n;
-    if (hintEl) hintEl.textContent = touchy ? "touch the people" : "hover over the people";
+    if (hintEl) hintEl.textContent = !touchy ? "hover over the people"
+      : stage === 0 ? "tap to bring them into flow"
+      : stage < 3 ? "tap again" : "tap to continue ↓";
   }
   function set(i, on) {
     const p = people[i];
@@ -732,10 +738,9 @@
     bubbles[i].el.classList.toggle("calm", on);
   }
   const local = (e) => { const r = host.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
-  function hover(pt, touch) {
-    clearTimeout(releaseTimer);
+  function hover(pt) {
     const [x, y] = local(pt);
-    const rad = target.clientWidth * (touch ? 0.07 : 0.045);
+    const rad = target.clientWidth * 0.045;
     centers.forEach(([cx, cy], i) => set(i, Math.hypot(x - cx, y - cy) < rad));
     update();
     kick();
@@ -745,14 +750,24 @@
     update();
     kick();
   }
-  host.addEventListener("pointermove", (e) => { if (e.pointerType === "mouse") hover(e); });
-  host.addEventListener("pointerleave", (e) => { if (e.pointerType === "mouse") releaseAll(); });
-  // Touch: touching or dragging a finger over the image works like hovering.
-  // Listeners are passive, so the page still scrolls normally.
-  const onTouch = (e) => { if (e.touches[0]) hover(e.touches[0], true); };
-  host.addEventListener("touchstart", onTouch, { passive: true });
-  host.addEventListener("touchmove", onTouch, { passive: true });
-  host.addEventListener("touchend", () => { releaseTimer = setTimeout(releaseAll, 1500); }, { passive: true });
+  function tapStage() {
+    if (stage >= 3) {
+      document.querySelector(".opening")?.scrollIntoView({ behavior: reduced ? "auto" : "smooth" });
+      return;
+    }
+    stage++;
+    // sweep left to right: the next third of the team turns green one person after another
+    const order = people.map((_, i) => i).sort((a, b) => centers[a][0] - centers[b][0]);
+    const from = Math.round(((stage - 1) / 3) * total), to = Math.round((stage / 3) * total);
+    order.slice(from, to).forEach((i, k) => setTimeout(() => { set(i, true); update(); kick(); }, k * 70));
+    update();
+  }
+  if (touchy) {
+    host.addEventListener("click", tapStage);           // a tap, not a scroll
+  } else {
+    host.addEventListener("pointermove", (e) => { if (e.pointerType === "mouse") hover(e); });
+    host.addEventListener("pointerleave", (e) => { if (e.pointerType === "mouse") releaseAll(); });
+  }
 
   update();
   resize();
