@@ -721,15 +721,21 @@
   const touchy = matchMedia("(hover: none)").matches;
   if (totalEl) totalEl.textContent = total;
 
-  // Touch screens: each tap brings the next third of the team into flow (1/3, 2/3, 3/3),
-  // the fourth tap moves on to the next section.
+  // Touch screens: the first three swipes down each bring a third of the team into flow,
+  // picked from all around the room; the fourth swipe moves on to the next section.
   let stage = 0;
+  const groups = [[], [], []];
+  people.map((p, i) => ({ i, a: Math.atan2(p.anchor.z, p.anchor.x) }))
+    .sort((a, b) => a.a - b.a)
+    .forEach((o, k) => groups[k % 3].push(o.i));          // every third person around the room
+  const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+
   function update() {
     const n = people.filter((p) => p.target === 1).length;
     if (countEl) countEl.textContent = n;
     if (hintEl) hintEl.textContent = !touchy ? "hover over the people"
-      : stage === 0 ? "tap to bring them into flow"
-      : stage < 3 ? "tap again" : "tap to continue ↓";
+      : stage === 0 ? "scroll to bring them into flow"
+      : stage < 3 ? "scroll again" : "scroll to continue ↓";
   }
   function set(i, on) {
     const p = people[i];
@@ -750,20 +756,24 @@
     update();
     kick();
   }
-  function tapStage() {
+  function advance() {
     if (stage >= 3) {
       document.querySelector(".opening")?.scrollIntoView({ behavior: reduced ? "auto" : "smooth" });
       return;
     }
-    stage++;
-    // sweep left to right: the next third of the team turns green one person after another
-    const order = people.map((_, i) => i).sort((a, b) => centers[a][0] - centers[b][0]);
-    const from = Math.round(((stage - 1) / 3) * total), to = Math.round((stage / 3) * total);
-    order.slice(from, to).forEach((i, k) => setTimeout(() => { set(i, true); update(); kick(); }, k * 70));
+    shuffle(groups[stage++]).forEach((i, k) => setTimeout(() => { set(i, true); update(); kick(); }, k * 90));
     update();
   }
   if (touchy) {
-    host.addEventListener("click", tapStage);           // a tap, not a scroll
+    host.addEventListener("click", advance);
+    // While the page sits at the top, a swipe down the page is caught and used for the next step.
+    let y0 = 0, caught = false;
+    addEventListener("touchstart", (e) => { y0 = e.touches[0].clientY; caught = scrollY < 8; }, { passive: true });
+    addEventListener("touchmove", (e) => { if (caught && e.touches[0].clientY < y0) e.preventDefault(); }, { passive: false });
+    addEventListener("touchend", (e) => {
+      if (caught && y0 - e.changedTouches[0].clientY > 30) advance();
+      caught = false;
+    }, { passive: true });
   } else {
     host.addEventListener("pointermove", (e) => { if (e.pointerType === "mouse") hover(e); });
     host.addEventListener("pointerleave", (e) => { if (e.pointerType === "mouse") releaseAll(); });
