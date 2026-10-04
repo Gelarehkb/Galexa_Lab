@@ -1,11 +1,18 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="no-js">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Galexa Lab — Simple AI for everyday work</title>
   <meta name="description" content="Galexa Lab builds simple AI workflows that take repetitive tasks off your plate, so your team can think clearly and stay creative." />
+  <script>document.documentElement.className = "js";</script>
   <link rel="stylesheet" href="assets/style.css" />
+  <script type="importmap">
+    { "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    } }
+  </script>
 </head>
 <body>
 
@@ -14,9 +21,7 @@
       <a href="#top" class="logo">Galexa Lab</a>
       <nav class="nav">
         <a href="#solutions">Solutions</a>
-        <a href="#how">How it works</a>
-        <a href="#calculator">Time back</a>
-        <a href="#faq">FAQ</a>
+        <a href="#value">Value</a>
         <a href="#contact" class="nav-cta">Book a free call</a>
       </nav>
       <button class="menu-toggle" aria-label="Open menu" aria-expanded="false">Menu</button>
@@ -25,14 +30,26 @@
 
   <main id="top">
 
-    <!-- Hero -->
+    <!-- Hero: only the animated 3D office over the skyline -->
     <section class="hero">
-      <div class="hero-art" aria-hidden="true"></div>
-      <div class="wrap hero-inner">
-        <p class="eyebrow">AI for everyday business</p>
-        <h1>Less busywork.<br />More flow.</h1>
-        <p class="lead">Galexa Lab takes the repetitive tasks off your plate with simple AI workflows, so you and your team can keep a clear mind and spend your energy on creative work instead of manual work.</p>
-        <div class="actions">
+      <div id="office" class="office"></div>
+      <div class="hero-fade" aria-hidden="true"></div>
+      <div class="hero-inner">
+        <div class="office-target"></div>
+        <p class="office-caption"><span id="flowCount">0</span> of <span id="flowTotal">14</span> people in flow · <span id="flowHint">hover over the people</span></p>
+      </div>
+    </section>
+
+    <!-- Opening: the message appears piece by piece while scrolling -->
+    <section class="opening" aria-label="Introduction">
+      <div class="opening-inner wrap">
+        <p class="eyebrow" data-step>AI for everyday business</p>
+        <h1>
+          <span data-step>Less busywork.</span>
+          <span data-step>More flow.</span>
+        </h1>
+        <p class="lead" data-step>Galexa Lab takes the repetitive tasks off your plate with simple AI workflows, so you and your team can keep a clear mind and spend your energy on creative work instead of manual work.</p>
+        <div class="actions" data-step>
           <a href="#contact" class="btn">Book a free call</a>
           <a href="#solutions" class="link">See what we automate →</a>
         </div>
@@ -82,89 +99,70 @@
       </div>
     </section>
 
-    <!-- How it works -->
-    <section id="how" class="section band">
+    <!-- Value: same payroll, better use of it -->
+    <section id="value" class="section band">
       <div class="wrap">
-        <h2 class="section-title">How it works</h2>
-        <ol class="steps">
-          <li class="reveal">
-            <span class="num">01</span>
-            <h3>Talk</h3>
-            <p>A free 30-minute call. You tell us what your week looks like and what drains you.</p>
-          </li>
-          <li class="reveal">
-            <span class="num">02</span>
-            <h3>Map</h3>
-            <p>We pick the one or two tasks where AI saves the most time, and show you exactly what will change.</p>
-          </li>
-          <li class="reveal">
-            <span class="num">03</span>
-            <h3>Build</h3>
-            <p>We set it up inside the tools you already use — email, calendar, spreadsheets, your shop or CRM.</p>
-          </li>
-          <li class="reveal">
-            <span class="num">04</span>
-            <h3>Flow</h3>
-            <p>You get a short walkthrough and ongoing support. It just runs — and you get your time back.</p>
-          </li>
-        </ol>
-      </div>
-    </section>
+        <h2 class="section-title">Same team. Better hours.</h2>
+        <p class="intro">You already pay for every hour your team works. The question is what those hours are spent on. AI takes the repetitive part — your people keep their hours for the work only they can do.</p>
 
-
-    <!-- Calculator -->
-    <section id="calculator" class="section">
-      <div class="wrap">
-        <h2 class="section-title">How much time could you get back?</h2>
-        <div class="calc reveal">
-          <div class="calc-inputs">
+        <div class="value reveal">
+          <div class="value-inputs">
             <label>
               <span>People on your team</span>
-              <output id="peopleOut">3</output>
-              <input type="range" id="people" min="1" max="50" value="3" />
+              <output id="peopleOut">5</output>
+              <input type="range" id="people" min="1" max="50" value="5" />
             </label>
             <label>
               <span>Hours per person per week on repetitive tasks</span>
-              <output id="hoursOut">6</output>
-              <input type="range" id="hours" min="1" max="20" value="6" />
+              <output id="hoursOut">8</output>
+              <input type="range" id="hours" min="1" max="20" value="8" />
+            </label>
+            <label>
+              <span>Average cost per hour</span>
+              <output id="rateOut">€40</output>
+              <input type="range" id="rate" min="15" max="120" step="5" value="40" />
             </label>
           </div>
-          <div class="calc-result">
-            <span class="result-num" id="result">0</span>
-            <span class="result-label">hours back per year</span>
-            <p class="note">Rough estimate, assuming about half of those tasks can be automated.</p>
+
+          <div class="week">
+            <div class="week-toggle" role="tablist">
+              <button class="active" data-mode="today" role="tab">Today</button>
+              <button data-mode="flow" role="tab">With Galexa Lab</button>
+            </div>
+            <p class="week-title">A 40-hour week, per person</p>
+            <div class="week-bar" aria-hidden="true">
+              <span class="seg seg-busy"></span>
+              <span class="seg seg-analysis"></span>
+              <span class="seg seg-clients"></span>
+              <span class="seg seg-ideas"></span>
+              <span class="seg seg-core"></span>
+            </div>
+            <ul class="legend">
+              <li><i class="seg-busy"></i>Repetitive tasks</li>
+              <li><i class="seg-analysis"></i>Analysis</li>
+              <li><i class="seg-clients"></i>Clients &amp; communication</li>
+              <li><i class="seg-ideas"></i>Innovation</li>
+              <li><i class="seg-core"></i>Core work</li>
+            </ul>
+
+            <div class="value-results">
+              <div>
+                <span class="value-num" id="spend">€0</span>
+                <span class="value-label">payroll per year that goes into repetitive work today</span>
+              </div>
+              <div>
+                <span class="value-num" id="moved">0 h</span>
+                <span class="value-label">per year moved to analysis, clients and new ideas — same team, no new hires</span>
+              </div>
+            </div>
+            <p class="note">Estimate, assuming about half of the repetitive work can be handed to AI and 46 working weeks a year.</p>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- FAQ -->
-    <section id="faq" class="wrap section narrow">
-      <h2 class="section-title">Questions</h2>
-      <details class="reveal">
-        <summary>Do I need technical knowledge?</summary>
-        <p>No. We do the setup. You just tell us how you work today and approve how it should work tomorrow.</p>
-      </details>
-      <details class="reveal">
-        <summary>Will AI replace my team?</summary>
-        <p>No — it takes over the repetitive parts so your people can focus on the work that needs a human: ideas, relationships and decisions.</p>
-      </details>
-      <details class="reveal">
-        <summary>Which tools do you work with?</summary>
-        <p>Most common ones: Gmail and Outlook, Google Workspace and Microsoft 365, Slack, Notion, Shopify, and many CRMs and accounting tools. Ask us about yours.</p>
-      </details>
-      <details class="reveal">
-        <summary>What about my data?</summary>
-        <p>We only use what a workflow needs, follow GDPR, and can work with EU-hosted services. You decide what the AI may and may not do.</p>
-      </details>
-      <details class="reveal">
-        <summary>How long does it take?</summary>
-        <p>A first workflow is usually running within one to two weeks.</p>
-      </details>
-    </section>
-
     <!-- Contact -->
-    <section id="contact" class="section band">
+    <section id="contact" class="section">
       <div class="wrap narrow">
         <h2 class="section-title">Let's free up your week</h2>
         <p class="center muted">Book a free, no-pressure call. Tell us one task you'd love to never do again.</p>
@@ -191,6 +189,7 @@
     </nav>
   </footer>
 
+  <script src="assets/office3d.js"></script>
   <script src="assets/main.js"></script>
 </body>
 </html>

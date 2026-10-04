@@ -1,29 +1,5 @@
 const $ = (s, el = document) => el.querySelector(s);
 
-/* ---------- Hero background: calm, blurred colour field ---------- */
-function heroSVG(w = 1600, h = 900) {
-  const fields = [
-    { cx: 0.78, cy: 0.30, r: 0.42, c: "#e4ddd2", o: 0.9 },
-    { cx: 0.95, cy: 0.85, r: 0.38, c: "#d5dbd6", o: 0.8 },
-    { cx: 0.55, cy: 0.95, r: 0.30, c: "#ece4da", o: 0.7 },
-  ];
-  const circles = fields
-    .map((f) => `<circle cx="${f.cx * w}" cy="${f.cy * h}" r="${f.r * w}" fill="${f.c}" opacity="${f.o}" filter="url(#blur)"/>`)
-    .join("");
-  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <filter id="blur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="${w * 0.08}"/></filter>
-      <filter id="soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="${w * 0.006}"/></filter>
-      <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" stitchTiles="stitch"/><feColorMatrix values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .05 0"/></filter>
-    </defs>
-    <rect width="${w}" height="${h}" fill="#faf9f6"/>
-    ${circles}
-    <circle cx="${0.74 * w}" cy="${0.42 * h}" r="${0.035 * w}" fill="#2b2b2b" opacity=".85" filter="url(#soft)"/>
-    <rect width="${w}" height="${h}" filter="url(#grain)"/>
-  </svg>`;
-}
-$(".hero-art").innerHTML = heroSVG();
-
 /* ---------- Header ---------- */
 const header = $(".site-header");
 addEventListener("scroll", () => header.classList.toggle("scrolled", scrollY > 10), { passive: true });
@@ -38,19 +14,78 @@ nav.addEventListener("click", (e) => {
   if (e.target.closest("a")) { nav.classList.remove("open"); toggle.textContent = "Menu"; }
 });
 
-/* ---------- Time-back calculator ---------- */
-const AUTOMATABLE = 0.5; // share of repetitive work that can typically be automated
-const WORK_WEEKS = 46;
-const people = $("#people"), hours = $("#hours");
-function calc() {
-  $("#peopleOut").textContent = people.value;
-  $("#hoursOut").textContent = hours.value;
-  const total = Math.round(people.value * hours.value * WORK_WEEKS * AUTOMATABLE);
-  $("#result").textContent = total.toLocaleString("en");
+/* ---------- Opening: reveal the message piece by piece while scrolling ---------- */
+const opening = $(".opening");
+const steps = [...opening.querySelectorAll("[data-step]")];
+let shown = 0, wanted = 0, pumpTimer = null;
+
+function pump() {
+  if (shown >= wanted) { pumpTimer = null; return; }
+  steps[shown++].classList.add("shown");
+  pumpTimer = setTimeout(pump, 260); // keep them one after another, even on a fast scroll
 }
-people.addEventListener("input", calc);
-hours.addEventListener("input", calc);
-calc();
+function want(n) {
+  wanted = Math.max(wanted, Math.min(n, steps.length));
+  if (!pumpTimer) pump();
+}
+function onOpeningScroll() {
+  const r = opening.getBoundingClientRect(), vh = innerHeight;
+  if (r.bottom < vh) return want(steps.length);
+  const into = vh * 0.75 - r.top;                     // px scrolled into the section
+  const per = Math.max(60, (r.height - vh) / steps.length);
+  if (into > 0) want(1 + Math.floor(into / per));
+}
+if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
+  steps.forEach((el) => el.classList.add("shown"));
+} else {
+  addEventListener("scroll", onOpeningScroll, { passive: true });
+  onOpeningScroll();
+}
+
+/* ---------- Value: same team, better hours ---------- */
+const AUTOMATABLE = 0.5; // share of repetitive work AI can typically take over
+const WORK_WEEKS = 46;
+const WEEK = 40;
+const people = $("#people"), hours = $("#hours"), rate = $("#rate");
+const bar = $(".week-bar");
+let mode = "today";
+
+const euro = (n) => "€" + Math.round(n).toLocaleString("en").replace(/,/g, ".");
+
+function renderValue() {
+  const p = +people.value, h = +hours.value, r = +rate.value;
+  $("#peopleOut").textContent = p;
+  $("#hoursOut").textContent = h;
+  $("#rateOut").textContent = "€" + r;
+
+  const freed = h * AUTOMATABLE;               // hours per person per week
+  const busy = mode === "today" ? h : h - freed;
+  const moved = mode === "today" ? 0 : freed;
+  const core = WEEK - h;
+  const pct = (x) => `${(x / WEEK) * 100}%`;
+  bar.querySelector(".seg-busy").style.width = pct(busy);
+  bar.querySelector(".seg-analysis").style.width = pct(moved / 3);
+  bar.querySelector(".seg-clients").style.width = pct(moved / 3);
+  bar.querySelector(".seg-ideas").style.width = pct(moved / 3);
+  bar.querySelector(".seg-core").style.width = pct(core);
+
+  $("#spend").textContent = euro(p * h * r * WORK_WEEKS);
+  $("#moved").textContent = Math.round(p * freed * WORK_WEEKS).toLocaleString("en").replace(/,/g, ".") + " h";
+}
+[people, hours, rate].forEach((el) => el.addEventListener("input", renderValue));
+document.querySelectorAll(".week-toggle button").forEach((b) => b.addEventListener("click", () => {
+  mode = b.dataset.mode;
+  document.querySelectorAll(".week-toggle button").forEach((x) => x.classList.toggle("active", x === b));
+  renderValue();
+}));
+renderValue();
+
+// Show the shift once, the first time the section comes into view
+new IntersectionObserver(([e], io) => {
+  if (!e.isIntersecting) return;
+  io.disconnect();
+  setTimeout(() => $('.week-toggle [data-mode="flow"]').click(), 900);
+}, { threshold: 0.5 }).observe($(".week"));
 
 /* ---------- Contact form ---------- */
 // Connect to a form service (e.g. Formspree) to actually receive messages.

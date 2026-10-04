@@ -2,7 +2,7 @@
 
 A minimal one-page website for **Galexa Lab**: simple AI workflows that take repetitive tasks off a business's plate, so teams can keep a clear mind and stay creative.
 
-**Live site:** https://gelarehkb.github.io/doodle/ (once GitHub Pages is enabled)
+**Live site:** https://gelarehkb.github.io/Galexa_Lab/
 
 ## What's on the page
 
@@ -30,7 +30,7 @@ Open `index.html` in a browser.
 
 1. In the repo, go to **Settings → Pages**.
 2. Set the source to the `main` branch and the `/ (root)` folder.
-3. Save. The site is published at `https://gelarehkb.github.io/doodle/`.
+3. Save. The site is published at `https://gelarehkb.github.io/Galexa_Lab/`.
 
 ## To do before launch
 
