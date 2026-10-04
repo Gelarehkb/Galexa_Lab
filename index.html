@@ -7,11 +7,16 @@
   <meta name="description" content="Galexa Lab builds simple AI workflows that take repetitive tasks off your plate, so your team can think clearly and stay creative." />
   <script>document.documentElement.className = "js";</script>
   <link rel="stylesheet" href="assets/style.css" />
-  <script type="importmap">
-    { "imports": {
-        "three": "./assets/vendor/three/build/three.module.js",
-        "three/addons/": "./assets/vendor/three/examples/jsm/"
-    } }
+  <script>
+    // three.js comes from our own server. Opened straight from disk (file://) browsers
+    // block local modules, so the local preview loads it from the CDN instead.
+    (function () {
+      var base = location.protocol === "file:" ? "https://cdn.jsdelivr.net/npm/three@0.160.0/" : "./assets/vendor/three/";
+      var map = document.createElement("script");
+      map.type = "importmap";
+      map.textContent = JSON.stringify({ imports: { three: base + "build/three.module.js", "three/addons/": base + "examples/jsm/" } });
+      document.currentScript.after(map);
+    })();
   </script>
 </head>
 <body>
